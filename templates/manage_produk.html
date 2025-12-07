@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manajemen Produk</title>
+<link rel="icon" href="{{ url_for('static', filename='favicon_new1.ico') }}" type="image/x-icon">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+<style>
+body {
+    font-family: Poppins, sans-serif;
+    background: linear-gradient(160deg, #3a3a3a 0%, #7f6856 50%, #2c2c2c 100%);
+    color: #f1f1f1;
+    margin:0; 
+    padding:0; 
+    display:flex; 
+    flex-direction:column; 
+    min-height:100vh; 
+}
+
+header { 
+    background: #8B0000;
+    color: #fff; 
+    text-align:center; 
+    padding:15px 0; 
+    border-radius:0 0 40px 40px; 
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.menu-card {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align:center;
+    padding:25px 15px;
+    cursor:pointer;
+    transition: all 0.3s;
+    min-height:150px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    border: 2px solid transparent;
+    backdrop-filter: blur(6px);
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow:0 8px 20px rgba(255,255,255,0.1);
+    border-color:#a83232;
+}
+
+.menu-icon { font-size:32px; margin-bottom:10px; }
+.menu-title { font-size:1.05rem; font-weight:600; margin-bottom:5px; }
+.menu-desc { font-size:0.85rem; opacity:0.9; }
+.menu-input .menu-icon { color:#ffcc33; }
+.menu-delete .menu-icon { color:#ff4d4d; }
+
+.btn-back {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    color: #ffcc33;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    z-index: 105;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+}
+
+.container-main {
+    flex: 1 0 auto;
+    overflow-y: auto;   /* biar konten scrollable */
+    -webkit-overflow-scrolling: touch; /* iOS smooth */
+    margin-top: 70px;   /* space untuk header */
+    margin-bottom: 70px; /* space untuk footer */
+}
+
+footer {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-top: 2px solid #6b0000;
+    padding: 12px 0;
+    font-size: 0.9em;
+    color: #bbb;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    border-radius: 30px 30px 0 0;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+}
+
+@media (max-width:768px){ 
+    .menu-card { min-height:130px; padding:15px 10px; } 
+    .menu-icon { font-size:28px; } 
+    .menu-title { font-size:1rem; } 
+    .menu-desc { font-size:0.8rem; } 
+
+    /* Perbaikan agar menu-card benar-benar center */
+    .col-sm-6 { 
+        flex: 0 0 80%; 
+        max-width: 80%; 
+        margin-left: auto;
+        margin-right: auto;
+    } 
+}
+
+/* ===== Ukuran Menu ===== */
+
+/* ===== Desktop: maksimal 3 menu per baris ===== */
+@media (min-width: 769px) {
+    .row.g-4 {
+        display: grid !important;
+        grid-template-columns: repeat(3, 250px); /* 3 menu per baris */
+        gap: 20px;          /* jarak horizontal & vertikal antar menu */
+        justify-content: center;
+        margin: 0;          /* hilangkan margin default bootstrap */
+    }
+
+    .row.g-4 > .col-md-3 {
+        flex: unset !important;      
+        width: unset !important;     
+        max-width: unset !important; 
+    }
+
+    .menu-card {
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+}
+
+
+/* Mobile / HP: 2 kolom */
+@media (max-width: 768px) {
+    .container-main .col-md-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+        margin-bottom: 8px;  /* jarak antar menu */
+    }
+
+    .menu-card {
+        min-height: 90px;       /* tinggi lebih ramping */
+        height: auto;           /* fleksibel */
+        padding: 8px 8px;       /* padding lebih kecil */
+    }
+
+    .menu-icon { font-size: 20px; }   
+    .menu-title { font-size: 0.85rem; }  
+    .menu-desc { font-size: 0.7rem; }    
+}
+
+
+@media (max-width: 768px) {
+
+    /* Izinkan sedikit scroll untuk pull-to-refresh */
+   html, body {
+    height: auto;                     /* jangan paksa 100vh */
+    min-height: 100%;                 
+    overflow-y: auto;                 
+    -webkit-overflow-scrolling: touch; /* smooth scroll iOS */
+    overscroll-behavior-y: auto;       /* biar pull-to-refresh jalan di Android */
+    margin: 0;
+    padding: 0;
+}
+
+    /* Header dan footer selalu fixed */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+    }
+
+    footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+    }
+
+    /* Isi halaman tidak perlu fixed */
+    .container-main {
+        margin-top: 120px;     /* beri ruang di bawah header fixed */
+        margin-bottom: 100px;  /* beri ruang untuk footer fixed */
+    }
+}
+
+</style>
+</head>
+
+<body onload="AOS.init()">
+
+<header class="judul-fixed" data-aos="fade-down" data-aos-duration="800">
+    <h2><i class="bi bi-box-seam"></i> Manajemen (Admin)</h2>
+</header>
+
+<div class="container container-main">
+    <div class="row g-4 justify-content-center">
+
+        <!-- Hapus Produk -->
+        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+            <div class="menu-card menu-delete" onclick="location.href='{{ url_for('hapus.hapus_produk') }}'">
+                <div class="menu-icon"><i class="bi bi-trash"></i></div>
+                <div class="menu-title">Hapus Produk</div>
+                <div class="menu-desc">Hapus produk dari database</div>
+            </div>
+        </div>
+
+        <!-- Review Produk Baru -->
+        <div class="col-md-3 col-sm-6">
+            <div class="menu-card menu-review" onclick="location.href='/review'">
+                <div class="menu-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="menu-title">Review Produk</div>
+                <div class="menu-desc">Terima atau tolak produk baru</div>
+            </div>
+        </div>
+
+        <!-- Produk Ditolak -->
+        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="400">
+            <div class="menu-card menu-rejected" onclick="location.href='/tolak'">
+                <div class="menu-icon"><i class="bi bi-x-circle"></i></div>
+                <div class="menu-title">Produk Ditolak</div>
+                <div class="menu-desc">Lihat produk yang ditolak/diterima</div>
+            </div>
+        </div>
+
+        <!-- Reset User -->
+        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="600">
+            <div class="menu-card menu-input" onclick="location.href='{{ url_for('admin.reset_user') }}'">
+                <div class="menu-icon"><i class="bi bi-key-fill"></i></div>
+                <div class="menu-title">Reset User</div>
+                <div class="menu-desc">Reset username & password</div>
+            </div>
+        </div>
+
+        <!-- Review User Baru -->
+        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="800">
+            <div class="menu-card menu-review-user" onclick="location.href='{{ url_for('review_user.review_user') }}'">
+                <div class="menu-icon"><i class="bi bi-person-check-fill"></i></div>
+                <div class="menu-title">Review User</div>
+                <div class="menu-desc">Terima atau tolak user baru</div>
+            </div>
+        </div>
+
+        <!-- Hapus User -->
+        <div class="col-md-3 col-sm-6" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="900">
+            <div class="menu-card menu-delete-user" onclick="location.href='{{ url_for('delete_user.delete_user') }}'">
+                <div class="menu-icon"><i class="bi bi-person-dash-fill"></i></div>
+                <div class="menu-title">Hapus User</div>
+                <div class="menu-desc">Hapus user dari sistem</div>
+            </div>
+        </div>
+    </div>
+        
+    <!-- Tombol back fixed -->
+    <a href="{{ url_for('index_menu') }}" class="btn-back">
+        <i class="bi bi-arrow-left-circle"></i> Kembali ke Menu
+    </a>
+</div>
+
+<footer>
+    © 2025 Eeng Irawan. All Rights Reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+document.addEventListener("scroll", function () {
+    if (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+    }
+});
+</script>
+
+
+</body>
+</html>

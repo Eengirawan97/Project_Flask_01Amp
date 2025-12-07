@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Input Expired - Sistem Cek Expired</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon_new1.ico') }}">
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body { 
+    font-family: 'Poppins', sans-serif; 
+    background: linear-gradient(160deg, #3a3a3a 0%, #7f6856 50%, #2c2c2c 100%);
+    color: #f1f1f1;
+    margin: 0; 
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main { flex: 1 0 auto; }
+
+header {
+    background-color: #8B0000;
+    color: white;
+    padding: 10px 0;
+    border-radius: 0 0 30px 30px;
+    box-shadow: 0 40px 40px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.card {
+    position: relative; 
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+    padding: 25px;
+    opacity: 1; /* buat langsung muncul dulu */
+    transform: translateY(0);
+    transition: all 0.6s ease;
+    background: #e0e0e0;
+    overflow: hidden;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 40%),
+        radial-gradient(circle at 70% 70%, rgba(255,255,255,0.1), transparent 50%);
+    z-index: 0; /* tetap di belakang */
+    pointer-events: none;
+    border-radius: 20px; /* sesuaikan dengan card */
+}
+
+.card > * {
+    position: relative;
+    z-index: 1; /* konten card di atas pseudo-element */
+}
+
+.highlight-header {
+    display: inline-block; /* teks sesuai lebarnya */
+   color: #000000;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+    margin: 15px 0 20px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #a83232; /* garis tipis bawah teks */
+}
+
+.form-control, .form-select { border-radius:6px; padding:8px 12px; font-size:0.95rem; }
+.scan-btn {
+    width:42px; height:38px; border:2px solid #0dcaf0;
+    border-radius:6px;
+    background:none;
+    color:#0dcaf0;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s;
+}
+.scan-btn:hover { background:#d0f0ff; transform:scale(1.05); }
+.result-box {
+    font-family: monospace;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    color: #333;
+    margin-top: 3px;
+    background: #ffffe0;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    min-height: 40px;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+}
+.btn-success { padding:8px 20px; font-size:1rem; border-radius:6px; transition:all 0.2s; }
+.btn-success:hover { transform:scale(1.03); }
+.btn-back {
+    display: inline-block;
+    margin: 5px auto; /* jarak atas/bawah kecil */
+    background: rgba(0,0,0,0.5);
+    color: #ffcc33;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+.btn-back:hover {
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+}
+
+#qr-scanner {
+  background: #eee; 
+}
+
+footer {
+    flex-shrink: 0; /* jangan mengecil */
+    background-color: rgba(255, 255, 255, 0.2);
+    border-top: 2px solid #6b0000;
+    padding: 10px 0;
+    font-size: 0.9em;
+    color: #fff;
+    border-radius: 30px 30px 0 0;
+    text-align: center;
+}
+.is-invalid { border-color: #dc3545; }
+.invalid-feedback { display:block; font-size:0.85rem; color:#dc3545; margin-top:2px; }
+</style>
+
+</head>
+<body onload="AOS.init()">
+
+<header>
+    <h2 data-aos="fade-down" data-aos-duration="800"> Form Input Expired</h2>
+</header>
+
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10" data-aos="fade-up" data-aos-duration="1000">
+            <div class="card" id="mainCard">
+                {% if message %}
+                <div class="alert alert-success d-flex align-items-center mb-3" role="alert" style="gap:5px;">
+                    <i class="bi bi-check-circle-fill" style="color:#28a745;"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endif %}
+                {% if error %}
+                <div class="alert alert-danger d-flex align-items-center mb-3" role="alert" style="gap:5px;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color:#dc3545;"></i>
+                    <span>{{ error }}</span>
+                </div>
+                {% endif %}
+
+                <form id="expiredForm" action="{{ url_for('monitoring.expired_input') }}" method="post">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Nama Petugas</label>
+                            <input name="petugas" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Posisi / Jabatan</label>
+                            <input name="posisi" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">No Gang</label>
+         <label class="form-label">No Gang</label>
+<select id="gangSelect" name="gang" class="form-select" required>
+    {% for i in range(1,81) %}
+    <option value="{{ i }}">{{ "%02d"|format(i) }}</option>
+    {% endfor %}
+</select>
+
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center">
+                        <p class="highlight-header" data-aos="fade-up" data-aos-duration="800">
+                            INPUT BARCODE DAN EXPIRED PRODUK
+                        </p>
+                    </div>
+
+                    <div id="batch-rows">
+                        {% for i in range(1,6) %}
+                        <div class="row g-2 align-items-start mb-3" id="row-{{ i }}">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" name="barcode_{{ i }}" class="form-control barcode-field" data-row="{{ i }}" placeholder="Barcode {{ i }}">
+                                    <button type="button" class="btn scan-btn" data-row="{{ i }}"><i class="bi bi-upc-scan"></i></button>
+                                </div>
+                                <div class="result-box" id="result-{{ i }}">Hasil lookup akan muncul di sini...</div>
+                                <input type="hidden" name="prodcode_{{ i }}">
+                                <input type="hidden" name="nama_produk_{{ i }}">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" name="expired_{{ i }}" class="form-control expired-field" maxlength="6" placeholder="Expired (DDMMYY)">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success">💾 Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="text-center mb-2">
+  <a href="{{ url_for('monitoring.monitoring_menu') }}" class="btn-back">
+    <i class="bi bi-arrow-left-circle"></i> Kembali ke Menu
+  </a>
+</div>
+
+<!-- QR SCANNER MODAL -->
+<div id="qr-scanner-container" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+  <div id="qr-scanner" style="width:300px; height:300px; background:#fff;"></div>
+  <button id="close-scanner" class="btn btn-danger" style="margin-top:10px;">Close</button>
+</div>
+
+<div class="footer-bar"></div>
+<footer class="footer">
+    © 2025 Eeng Irawan. All Rights Reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+window.addEventListener('load', () => {
+    // Tampilkan card dengan efek
+    document.getElementById('mainCard').classList.add('show');
+
+    // Prevent Enter submitting form secara global
+    const expiredForm = document.getElementById('expiredForm');
+    expiredForm.addEventListener('keypress', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); }
+    });
+
+    // =========================
+    // Lookup Barcode per row
+    // =========================
+    document.querySelectorAll('.barcode-field').forEach(input => {
+        const row = input.dataset.row;
+        const resultBox = document.getElementById('result-' + row);
+
+        // Cegah input selain angka
+        input.addEventListener('keypress', (e) => {
+            if(!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+
+        async function lookupBarcode() {
+            const barcode = input.value.trim();
+            if(!barcode) {
+                resultBox.textContent = "Hasil lookup akan muncul di sini...";
+                return;
+            }
+
+            resultBox.textContent = "Loading, please wait...";
+            try {
+                const res = await fetch(`/monitoring/lookup_barcode/${barcode}`);
+                const data = await res.json();
+
+                if(data.status === 'success') {
+                    resultBox.style.fontFamily = 'monospace';
+                    resultBox.style.whiteSpace = 'pre-wrap';
+                    resultBox.style.wordWrap = 'break-word';
+                    resultBox.innerHTML =
+                        "Prodcode    : " + data.data.prodcode + "<br>" +
+                        "Barcode     : " + data.data.barcode + "<br>" +
+                        "<span class='hanging'>Nama Produk : " + data.data.nama_produk + "</span>";
+
+                    document.querySelector(`input[name='prodcode_${row}']`).value = data.data.prodcode;
+                    document.querySelector(`input[name='nama_produk_${row}']`).value = data.data.nama_produk;
+                } else {
+                    resultBox.textContent = data.message;
+                    document.querySelector(`input[name='prodcode_${row}']`).value = '';
+                    document.querySelector(`input[name='nama_produk_${row}']`).value = '';
+                }
+            } catch(err) {
+                resultBox.textContent = 'Error lookup!';
+            }
+        }
+
+        // Trigger saat blur
+        input.addEventListener('blur', lookupBarcode);
+
+        // Trigger saat tekan Enter
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                lookupBarcode();
+            }
+        });
+    });
+
+    // =========================
+    // Validasi expired realtime
+    // =========================
+    document.querySelectorAll('.expired-field').forEach(input => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^0-9]/g, ''); // hanya angka
+            const row = input.closest('.row');
+            const barcode = row.querySelector('.barcode-field').value.trim();
+            const prodcode = row.querySelector('input[name^="prodcode_"]').value.trim();
+
+            // Hapus feedback lama
+            if(input.nextElementSibling && input.nextElementSibling.classList.contains('invalid-feedback')){
+                input.nextElementSibling.remove();
+            }
+
+            if(barcode && prodcode && input.value.length !== 6) {
+                input.classList.add('is-invalid');
+
+                const div = document.createElement('div');
+                div.className = 'invalid-feedback';
+                div.textContent = '❗ Expired harus 6 digit';
+                input.after(div);
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+    });
+
+  document.querySelectorAll('.scan-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const row = btn.dataset.row;
+        const inputField = document.querySelector(`input[name='barcode_${row}']`);
+
+        qrScannerContainer.style.display = 'flex';
+
+        if(html5QrCode) await html5QrCode.stop().catch(()=>{});
+
+        console.log('Opening QR scanner...');
+
+        setTimeout(() => {
+            html5QrCode = new Html5Qrcode("qr-scanner");
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                decodedText => {
+                    console.log('QR code detected:', decodedText);
+                    inputField.value = decodedText;
+                    inputField.dispatchEvent(new Event('blur'));
+                    html5QrCode.stop();
+                    qrScannerContainer.style.display = 'none';
+                },
+                errorMessage => {
+                    console.warn('QR scan error:', errorMessage);
+                }
+            ).catch(err => {
+                console.error("Unable to start QR scanner", err);
+            });
+        }, 300); // delay 300ms lebih aman
+    });
+});
+
+// Close button scanner
+closeBtn.addEventListener('click', () => {
+    if(html5QrCode) html5QrCode.stop().catch(()=>{});
+    qrScannerContainer.style.display = 'none';
+});
+
+    // =========================
+    // Submit form validation
+    // =========================
+    expiredForm.addEventListener('submit', (e) => {
+        let invalid = false;
+
+        document.querySelectorAll('.expired-field').forEach(input => {
+            const row = input.closest('.row');
+            const barcode = row.querySelector('.barcode-field').value.trim();
+            const prodcode = row.querySelector('input[name^="prodcode_"]').value.trim();
+
+            if(barcode && prodcode && (input.value.length !== 6 || !/^\d*$/.test(input.value))) {
+                invalid = true;
+                input.classList.add('is-invalid');
+
+                if(!input.nextElementSibling || !input.nextElementSibling.classList.contains('invalid-feedback')){
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback';
+                    div.textContent = '❗ Expired harus 6 digit';
+                    input.after(div);
+                }
+            }
+        });
+
+        if(invalid){
+            e.preventDefault();
+            alert('❗ Beberapa kolom expired belum valid, silakan perbaiki terlebih dahulu.');
+        }
+    });
+
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const gangSelect = document.getElementById('gangSelect');
+
+    new Choices(gangSelect, {
+        searchEnabled: true,   // search aktif
+        itemSelectText: '',    // hilangkan "Press to select"
+        shouldSort: false,     // tetap urut sesuai HTML
+        position: 'bottom',
+        removeItemButton: false
+    });
+});
+</script>
+
+</body>
+</html>

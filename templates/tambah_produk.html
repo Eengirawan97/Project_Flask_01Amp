@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tambah Produk - Sistem Monitoring</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(160deg, #3a3a3a 0%, #7f6856 50%, #2c2c2c 100%);
+    color: #fff;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background:#8B0000;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 0 0 40px 40px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+/* Card Form */
+.container-main {
+    flex: 1 0 auto;
+    max-width: 500px;
+    margin: 80px auto 100px;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+}
+
+.form-control {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid #555;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+.form-control:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: #ffcc33;
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: #8B0000;
+    border: none;
+}
+.btn-primary:hover {
+    background-color: #a83232;
+}
+
+footer {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-top: 2px solid #6b0000;
+    width: 100%;
+    padding: 7px 0;
+    font-size: 0.9em;
+    color: #bbb;
+    border-radius: 30px 30px 0 0;
+    text-align: center;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    flex-shrink: 0;      /* supaya tidak mengecil saat flex body */
+}
+
+/* Kotak info fixed kanan layar */
+.info-box-right {
+    position: fixed;
+    top: 150px;
+    right: 20px;
+    width: 250px;
+    padding: 15px;
+    border-left: 4px solid #ffcc33;
+    color: #fff;
+    font-size: 0.9em;
+    text-align: justify;
+}
+.info-box-right h5 {
+    border-bottom: 1px solid #ffcc33;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+@media(max-width: 767px){
+    .info-box-right {
+        position: static;
+        width: 100%;
+        margin: 10px 0 15px 0; /* jarak atas + bawah */
+        border-left: none;
+        border-top: 4px solid #ffcc33;
+        border-radius: 10px;
+        padding: 10px;
+        text-align: left;
+    }
+}
+
+/* Flash message floating */
+#flash-message {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    min-width: 300px;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+#flash-message.success { background-color: rgba(0, 128, 0, 0.85); color: #fff; }
+#flash-message.danger { background-color: rgba(220, 53, 69, 0.85); color: #fff; }
+#flash-message.warning { background-color: rgba(255, 193, 7, 0.85); color: #000; }
+
+.text-danger { font-size: 0.85em; margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+    <h2>Tambah Produk Baru</h2>
+</header>
+
+<!-- Flash message -->
+<div id="flash-message"></div>
+
+<!-- Card Form -->
+<div class="container container-main">
+    <form method="POST" id="tambah-form">
+        <div class="mb-3">
+            <label class="form-label">Kategori</label>
+            <input type="text" name="kategori" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Prod Code *</label>
+            <input type="text" name="prodcode" id="prodcode" class="form-control" required maxlength="12">
+            <div class="text-danger" id="prodcode-error" style="display:none;">Prod Code harus 10 angka!</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Barcode *</label>
+            <input type="text" name="barcode" id="barcode" class="form-control" required pattern="\d{13}" maxlength="13">
+            <div class="text-danger" id="barcode-error" style="display:none;">Barcode harus 13 angka!</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Nama Produk *</label>
+            <input type="text" name="nama_produk" id="nama_produk" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Simpan Produk</button>
+        <div class="mt-3">
+            <a href="{{ url_for('index_menu') }}" class="btn btn-primary w-100">
+                <i class="bi bi-arrow-left-circle"></i> Kembali ke Menu
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Kotak info fixed di kanan layar -->
+<div class="info-box-right">
+    <h5>⚠️ Informasi Penting</h5>
+    <p>
+        Setelah produk ditambahkan, data akan dikirim untuk <strong>direview oleh admin</strong>.<br>
+        Pastikan semua informasi <strong>lengkap dan benar</strong>.<br>
+        Produk yang memenuhi standar akan <strong>ditampilkan di sistem</strong>.<br>
+        Produk yang tidak sesuai akan dikembalikan atau direvisi oleh admin. bisa dicek di menu "Produk Ditolak"
+    </p>
+</div>
+
+<footer>© 2025 Eeng Irawan. All Rights Reserved.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Flash message ngambang
+window.addEventListener('DOMContentLoaded', () => {
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          const flashDiv = document.getElementById('flash-message');
+          flashDiv.className = '';
+          flashDiv.classList.add("{{ category }}");
+          flashDiv.innerHTML = `{{ message | e }}`;
+          flashDiv.style.display = 'block';
+
+          setTimeout(() => {
+              flashDiv.style.transition = 'opacity 0.5s';
+              flashDiv.style.opacity = '0';
+              setTimeout(() => { 
+                  flashDiv.style.display = 'none'; 
+                  flashDiv.style.opacity = '1';
+              }, 500);
+          }, 3000);
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+});
+
+// Validasi & format Prod Code & Barcode
+const prodcodeInput = document.getElementById('prodcode');
+const prodcodeError = document.getElementById('prodcode-error');
+const barcodeInput = document.getElementById('barcode');
+const barcodeError = document.getElementById('barcode-error');
+
+// Prod Code: hanya angka & maksimal 10 digit
+prodcodeInput.addEventListener('input', () => {
+    let val = prodcodeInput.value.replace(/\D/g,'').slice(0,10);
+    prodcodeInput.value = val;
+    prodcodeError.style.display = (val.length === 10) ? 'none' : 'block';
+});
+
+// Barcode: hanya angka & maksimal 13 digit
+barcodeInput.addEventListener('input', () => {
+    let val = barcodeInput.value.replace(/\D/g,'').slice(0,13);
+    barcodeInput.value = val;
+    barcodeError.style.display = (val.length === 13) ? 'none' : 'block';
+});
+
+// Format Prod Code X-XXXXXXX-XXX saat blur
+prodcodeInput.addEventListener('blur', () => {
+    let digits = prodcodeInput.value.replace(/\D/g, '').slice(0,10);
+    if(digits.length === 10){
+        prodcodeInput.value = digits[0] + '-' + digits.slice(1,7) + '-' + digits.slice(7,10);
+    }
+});
+
+// Validasi sebelum submit
+document.getElementById('tambah-form').addEventListener('submit', (e)=>{
+    const digitsOnly = prodcodeInput.value.replace(/\D/g,'');
+    if(digitsOnly.length !== 10 || barcodeInput.value.length !== 13){
+        e.preventDefault();
+        prodcodeError.style.display = (digitsOnly.length !== 10) ? 'block' : 'none';
+        barcodeError.style.display = (barcodeInput.value.length !== 13) ? 'block' : 'none';
+    }
+});
+
+// Nama Produk jadi huruf kapital
+const namaInput = document.getElementById('nama_produk');
+namaInput.addEventListener('input', () => {
+    namaInput.value = namaInput.value.toUpperCase();
+});
+</script>
+
+</body>
+</html>

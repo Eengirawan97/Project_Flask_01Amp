@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sistem Input Expired</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon_new1.ico') }}">
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(160deg, #2b2b2b 0%, #3a2f2f 60%, #1e1e1e 100%);
+    color: #f1f1f1;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+background: #8B0000;
+color:#fff;
+padding:15px 0;
+text-align:center;
+border-radius:0 0 40px 40px;
+opacity:0;
+transform: translateY(-20px);
+transition: all 0.6s ease;
+}
+header.show {
+opacity:1;
+transform: translateY(0); }
+header p {
+opacity:0;
+transform: translateY(-10px);
+transition: all 0.6s ease 0.2s; }
+header.show p {
+opacity:1;
+transform: translateY(0); }
+.container {
+    flex: 1 0 auto; /* flex-grow + flex-shrink + auto basis */
+    padding-bottom: 20px;
+}
+
+.card { border-radius:15px; margin-top:20px; opacity:0; transform: translateY(20px); transition: all 0.6s ease 0.4s; }
+.card.show { opacity:1; transform: translateY(0); }
+.btn-custom {
+background: #8B0000;
+color: #fff;
+border: none;
+}
+.btn-custom:hover {
+background: #6b0000;
+cursor: pointer;
+}
+#scan-btn, #scan-izin-btn {
+width:50px; border:2px solid #a83232; background:none; color:#a83232;
+display:flex; justify-content:center; align-items:center; font-size:20px;
+}
+#scan-btn:hover,
+#scan-izin-btn:hover {
+background: #f5f5f5;
+cursor: pointer;
+}
+.cari-produk {
+color: #a83232;
+font-weight: 600;
+font-size: 18px;
+margin-bottom: 5px;
+display: flex;
+align-items: center;
+}
+.cari-produk i {
+margin-right: 5px;
+}
+.alert {
+font-weight: 500;
+border-radius: 10px;
+}
+.is-invalid {
+border-color: red !important;
+}
+table td,
+table th,
+input {
+text-transform: none !important;
+}
+.position-relative {
+position: relative;
+}
+.back-fixed {
+    text-align: center;
+    margin: 20px 0 10px 0;
+}
+.btn-back {
+display: inline-block;
+margin: 10px auto;
+background: rgba(0,0,0,0.5);
+color: #ffcc33;
+font-weight: 600;
+font-size: 0.85rem;
+padding: 6px 12px;
+border-radius: 8px;
+text-decoration: none;
+text-align: center;
+transition: all 0.2s ease;
+}
+.btn-back:hover {
+background: rgba(0,0,0,0.7);
+color: #fff;
+}
+footer {
+    margin-top: auto; /* penting agar dorong footer ke bawah */
+    width: 100%;
+    background: linear-gradient(160deg, #2b2b2b 0%, #3a2f2f 60%, #1e1e1e 100%);
+    border-top: 2px solid #6b0000;
+    padding: 10px 0;
+    font-size: 0.9em;
+    color: #fff;
+    border-radius: 30px 30px 0 0;
+    text-align: center;
+}
+ 
+</style>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+</head>
+<body>
+
+<header>
+  <h2><i class="bi bi-box-seam"></i> Input Expired & Izin Edar Produk</h2>  
+</header>
+
+<div class="container">
+
+  <!-- ================= No Gang, Minggu, Bulan/Tahun ================= -->
+
+  <div class="card p-3">
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label for="gangInputTop" class="form-label text-warning">No Gang <span style="color:red">*</span></label>
+        <input type="text" id="gangInputTop" name="no_gang_top" class="form-control" placeholder="Contoh: 01" value="{{ no_gang if no_gang else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="mingguInput" class="form-label text-warning">Minggu ke</label>
+        <input type="text" id="mingguInput" name="minggu_ke" class="form-control" placeholder="1-5" value="{{ minggu_ke if minggu_ke else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label for="bulanTahunInput" class="form-label text-warning">Bulan / Tahun</label>
+        <input type="text" id="bulanTahunInput" name="bulan_tahun" class="form-control" placeholder="MM/YYYY" value="{{ bulan_tahun if bulan_tahun else '' }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FORM BARCODE & SAVE ================= -->
+
+  <div class="card p-3">
+    <div class="cari-produk"><i class="bi bi-search"></i> Cari Produk</div>
+
+<!-- FORM SEARCH -->
+<form id="barcode-form" method="post" action="/input">
+  <div class="mb-3">
+    <div class="input-group">
+      <input type="text" id="barcode-input" name="barcode_input" class="form-control" placeholder="Masukkan Barcode" value="{{ search_barcode }}">
+      <button type="button" id="scan-btn" class="ms-2"><i class="bi bi-upc-scan"></i></button>
+    </div>
+
+    <div id="barcode-alert" class="text-danger mt-1" style="display:none; font-size:0.85rem;">
+      ⚠️ Barcode tidak boleh kosong
+    </div>
+  </div>
+
+<!-- 🔥 Hidden values agar 3 field atas tidak hilang -->
+<input type="hidden" name="no_gang_top" id="hidden_no_gang" value="{{ no_gang if no_gang else '' }}">
+<input type="hidden" name="minggu_ke" id="hidden_minggu" value="{{ minggu_ke if minggu_ke else '' }}">
+<input type="hidden" name="bulan_tahun" id="hidden_bulan" value="{{ bulan_tahun if bulan_tahun else '' }}">
+
+  <div class="d-grid mb-3">
+    <button type="submit" name="action" value="search" class="btn btn-custom">🔍 Search</button>
+  </div>
+</form>
+
+{% if message %}
+  {% if message_type == 'error' %}
+    <div class="alert alert-danger" role="alert">{{ message|safe }}</div>
+  {% else %}
+    <div class="alert alert-success" role="alert">{{ message|safe }}</div>
+  {% endif %}
+{% endif %}
+
+<!-- FORM SAVE -->
+<form method="post" action="/input">
+  <input type="hidden" name="action" value="save">
+  <table class="table table-bordered mb-3">
+    <tbody>
+      <tr><th style="width:25%;">Category</th><td>{{ selected_product.category if selected_product else '' }}</td></tr>
+      <tr><th>Prodcode</th><td>{{ selected_product.prodcode if selected_product else '' }}</td></tr>
+      <tr><th>Barcode</th><td>{{ selected_product.barcode if selected_product else '' }}</td></tr>
+      <tr><th>Nama Produk</th><td>{{ selected_product.nama_produk if selected_product else '' }}</td></tr>
+
+      <tr>
+        <th>Expired<span style="color:red">*</span> (DDMMYY)</th>
+        <td class="position-relative">
+          <input type="text" name="expired" id="expiredInput" class="form-control"
+                 placeholder="Contoh: 290125" maxlength="6"
+                 value="{{ expired if expired else '' }}"
+                 required style="padding-right:25px;">
+
+          <div id="expiredFeedback" class="text-danger mt-1" style="display:none; font-size:0.85rem;">
+            ⚠️ Expired harus 6 angka (DDMMYY)
+          </div>
+        </td>
+      </tr>
+
+      <tr>
+        <th>Izin Edar</th>
+        <td>
+          <div class="input-group">
+            <input type="text" name="izin_edar" id="izinEdarInput" class="form-control"
+                   placeholder="Masukkan Izin Edar"
+                   value="{{ izin_edar if izin_edar else '' }}">
+          </div>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <input type="hidden" id="hidden_no_gang" name="no_gang_top" value="{{ no_gang if no_gang else '' }}">
+  <input type="hidden" id="hidden_minggu" name="minggu_ke" value="{{ minggu_ke if minggu_ke else '' }}">
+  <input type="hidden" id="hidden_bulan" name="bulan_tahun" value="{{ bulan_tahun if bulan_tahun else '' }}">
+
+  <div class="d-flex align-items-center justify-content-center mt-3">
+    <button type="submit" name="save" id="saveBtn" class="btn btn-success me-3">
+      💾 Save
+    </button>
+  </div>
+</form>
+
+  </div>
+
+<div class="back-fixed">
+  <a href="/" class="btn-back"><i class="bi bi-arrow-left-circle"></i> Kembali ke Menu </a>
+</div>
+
+<footer>© 2025 Eeng Irawan. All Rights Reserved.</footer>
+
+<!-- Modal & JS tetap sama, tidak diubah -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+window.addEventListener('load', ()=> {
+  document.querySelector('header').classList.add('show');
+  document.querySelectorAll('.card').forEach(c => c.classList.add('show'));
+});
+
+// ================================================
+// QR Scanner
+// ================================================
+let activeScanner = null;
+let activeDiv = null;
+
+function startScanner(targetButton, inputField, autoSubmit=false, readerId){
+  if(activeScanner){
+    activeScanner.stop().catch(()=>{}).finally(()=>{ if(activeDiv) activeDiv.remove(); activeScanner=null; activeDiv=null; });
+  }
+  const parentGroup = targetButton.closest('.input-group');
+  const div = document.createElement("div");
+  div.id = readerId;
+  div.style.marginTop="10px";
+  div.style.textAlign="center";
+  div.style.border="1px solid #ccc";
+  div.style.borderRadius="8px";
+  div.style.padding="5px";
+  div.style.background="#f9f9f9";
+  parentGroup.insertAdjacentElement('afterend', div);
+
+  activeScanner = new Html5Qrcode(readerId);
+  activeDiv = div;
+
+  setTimeout(()=>{
+    activeScanner.start({facingMode:"environment"},{fps:10, qrbox:250},
+      decodedText => {
+        inputField.value = decodedText;
+        activeScanner.stop().then(()=>{
+          div.remove(); activeScanner=null; activeDiv=null;
+          if(autoSubmit){ const form=inputField.closest('form'); if(form) form.submit(); }
+        });
+      },
+      error => {}
+    ).catch(err=>{
+      alert("Tidak dapat mengakses kamera.");
+      div.remove(); activeScanner=null; activeDiv=null;
+    });
+  },300);
+}
+
+document.addEventListener('click', (e)=>{
+  if(activeScanner && activeDiv && !activeDiv.contains(e.target) && !e.target.closest('.input-group')){
+    activeScanner.stop().catch(()=>{}).finally(()=>{ activeDiv.remove(); activeScanner=null; activeDiv=null; });
+  }
+});
+
+// ================================================
+// VALIDASI BARCODE & ENTER
+// ================================================
+const barcodeInput = document.getElementById("barcode-input");
+const searchButton = document.querySelector("button[name='action'][value='search']");
+const barcodeAlert = document.getElementById("barcode-alert");
+const barcodeForm = document.getElementById("barcode-form");
+const scanBtn = document.getElementById("scan-btn");
+
+if (scanBtn) {
+    scanBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        startScanner(scanBtn, barcodeInput, true, "reader-barcode");
+    });
+}
+
+// Hanya angka & maksimal 13 digit
+if (barcodeInput) {
+    barcodeInput.addEventListener("input", () => {
+        barcodeInput.value = barcodeInput.value.replace(/\D/g, '');
+        if (barcodeInput.value.length > 13) barcodeInput.value = barcodeInput.value.slice(0, 13);
+    });
+
+    barcodeInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            const form = barcodeInput.closest("form");
+            if (!form) return;
+
+            if (barcodeInput.value.trim() === "") {
+                e.preventDefault();
+                barcodeAlert.style.display = "block";
+                barcodeInput.classList.add("is-invalid");
+                return;
+            }
+
+            barcodeAlert.style.display = "none";
+            barcodeInput.classList.remove("is-invalid");
+
+            form.submit();
+        }
+    });
+}
+
+// Tombol Search
+if (barcodeForm) {
+    barcodeForm.addEventListener("submit", e => {
+        if (barcodeInput.value.trim() === "") {
+            e.preventDefault();
+            barcodeAlert.style.display = "block";
+            barcodeInput.classList.add("is-invalid");
+        } else {
+            barcodeAlert.style.display = "none";
+            barcodeInput.classList.remove("is-invalid");
+        }
+    });
+}
+
+// ================================================
+// VALIDASI EXPIRED + ENABLE SAVE BUTTON
+// ================================================
+const expiredInput = document.getElementById('expiredInput');
+const expiredFeedback = document.getElementById('expiredFeedback');
+const saveBtn = document.getElementById('saveBtn');
+const izinEdarInput = document.getElementById("izinEdarInput");
+
+function checkFormValidity() {
+    if (!saveBtn) return;
+    saveBtn.disabled = !(expiredInput.value.length === 6);
+}
+
+// ================================================
+// VALIDASI EXPIRED
+// ================================================
+if (expiredInput) {
+    expiredInput.addEventListener("input", () => {
+        expiredInput.value = expiredInput.value.replace(/[^0-9]/g, '');
+
+        if (expiredInput.value.length < 6) {
+            expiredInput.classList.add("is-invalid");
+            expiredFeedback.style.display = "block";
+        } else {
+            expiredInput.classList.remove("is-invalid");
+            expiredFeedback.style.display = "none";
+        }
+
+        if (expiredInput.value.length > 6) {
+            expiredInput.value = expiredInput.value.slice(0, 6);
+        }
+
+        checkFormValidity();
+    });
+
+    expiredInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            izinEdarInput.focus();
+        }
+    });
+}
+
+// ================================================
+// SUBMIT FORM SAVE
+// ================================================
+const saveForm = document.querySelector("form[action='/input'][method='post']");
+if(saveForm){
+    saveForm.addEventListener('submit', () => {
+        // Copy nilai input atas ke hidden fields
+        document.getElementById('hidden_no_gang').value = document.getElementById('gangInputTop').value;
+        document.getElementById('hidden_minggu').value = document.getElementById('mingguInput').value;
+        document.getElementById('hidden_bulan').value = document.getElementById('bulanTahunInput').value;
+
+        // Reset expired & izin edar setelah submit agar kosong
+        setTimeout(() => {
+            expiredInput.value = '';
+            izinEdarInput.value = '';
+            checkFormValidity();
+        }, 10);
+    });
+}
+
+// ================================================
+// IZIN EDAR (OPSIONAL)
+// ================================================
+if (izinEdarInput) {
+    izinEdarInput.addEventListener("input", checkFormValidity);
+}
+
+// ================================================
+// CEK AWAL
+// ================================================
+checkFormValidity();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login - Sistem Cek Expired</title>
+
+<!-- 🧩 Tambahkan favicon -->
+<link rel="icon" href="{{ url_for('static', filename='favicon_new1.ico') }}" type="image/x-icon">
+
+<!-- Bootstrap & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #a83232, #3b3b3b);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+.card-login {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    padding: 35px 30px 20px;
+    width: 340px;
+    color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-login:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.logo-box {
+    text-align: center;
+    margin-bottom: 15px;
+}
+.logo-box img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    padding: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+h4 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+.form-control {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 40px 10px 15px; /* tambahkan ruang kanan sedikit untuk ikon */
+}
+.form-control:focus {
+    background: rgba(255,255,255,0.3);
+    outline: none;
+    box-shadow: none;
+}
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper .eye-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: rgba(255,255,255,0.85);
+    font-size: 1.1rem;
+}
+
+
+.btn-login {
+    background-color: #ffffff;
+    color: #a83232;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+.btn-login:hover {
+    background-color: #a83232;
+    color: #fff;
+    transform: translateY(-2px);
+}
+.alert {
+    background: rgba(255, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 10px;
+}
+.footer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #a19e9e;
+    margin-top: 50px; /* turun sedikit */
+    padding-top: 12px;  /* beri ruang sebelum garis */
+    border-top: 2px solid rgba(255,255,255,0.3);
+    border-radius: 15px 15px 0 0; /* garis atas melengkung */
+}
+.link-anim {
+    color: #74c0f3 !important;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+/* Hover: sedikit membesar + lebih terang */
+.link-anim:hover {
+    color: #ffe766 !important;
+    transform: scale(1.07);
+}
+
+/* Saat diklik: mengecil sedikit (efek “press”) */
+.link-anim:active {
+    transform: scale(0.92);
+    color: #d4be29 !important;
+}
+
+</style>
+</head>
+<body>
+<div class="card-login">
+    <div class="logo-box">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    </div>
+    <h4>Login Sistem</h4>
+
+    <!-- Pesan flash jika ada -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }} py-2">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+        <!-- ==== FORM LOGIN ==== -->
+    <form method="POST">
+    <!-- Username -->
+    <div class="mb-3 position-relative">
+        <i class="bi bi-person position-absolute top-50 translate-middle-y ms-3"></i>
+        <input type="text" class="form-control ps-5" name="username" placeholder="Masukkan username" required>
+    </div>
+
+    <!-- Password -->
+    <div class="mb-4 position-relative password-wrapper">
+        <i class="bi bi-lock position-absolute top-50 translate-middle-y ms-3"></i>
+        <input type="password" class="form-control ps-5 pe-5" id="password" name="password" placeholder="Masukkan password" required>
+        <i class="bi bi-eye-slash eye-toggle" id="togglePassword"></i>
+    </div>
+
+    <!-- Button Login -->
+    <button type="submit" class="btn btn-login w-100 py-2 mb-2">
+        Masuk <i class="bi bi-box-arrow-in-right"></i>
+    </button>
+
+    <!-- Links biru tanpa underline -->
+    <div class="text-center small">
+    <a href="{{ url_for('buat_akun.buat_akun') }}" class="link-anim">
+        Buat Akun
+    </a>
+    &nbsp;atau&nbsp;
+    <a href="#" class="link-anim" data-bs-toggle="modal" data-bs-target="#popupLupaPassword">
+        Lupa Password?
+    </a>
+    </div>
+    </form>
+
+    <div class="footer-text">
+        © 2025 Eeng Irawan. All Rights Reserved.
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 👁️ Script toggle password -->
+<script>
+const togglePassword = document.querySelector("#togglePassword");
+const password = document.querySelector("#password");
+
+togglePassword.addEventListener("click", function () {
+  const type = password.getAttribute("type") === "password" ? "text" : "password";
+  password.setAttribute("type", type);
+
+  // Ganti ikon
+  this.classList.toggle("bi-eye");
+  this.classList.toggle("bi-eye-slash");
+});
+</script>
+<!-- Popup Modal -->
+<div class="modal fade" id="popupLupaPassword" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 15px;">
+      <div class="modal-header">
+        <h5 class="modal-title">Reset Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Jika Anda ingin reset password, silakan hubungi admin:<br>
+        <b>0812-7813-1760</b>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

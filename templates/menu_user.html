@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menu Utama - Sistem Cek Expired</title>
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="preload" href="{{ url_for('static', filename='bg6.png') }}" as="image">
+<link rel="preload" href="{{ url_for('static', filename='bg35.png') }}" as="image">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+/* ===== Global ===== */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(160deg, #2b2b2b 0%, #3a2f2f 60%, #1e1e1e 100%);
+    color: #f1f1f1;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* header spacing for desktop */
+@media (min-width: 769px) { body { padding-top: 100px; } }
+
+@media (min-width: 769px) {
+    body {
+        background: url("{{ url_for('static', filename='bg70.png') }}") no-repeat center center fixed;
+        background-size: cover;
+    }
+}
+
+/* Mobile (HP) */
+@media (max-width: 768px) {
+    body {
+        background: none !important; /* matikan background lama */
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("{{ url_for('static', filename='bg71.png') }}") center center / cover no-repeat;
+        z-index: -1; /* di belakang semua */
+    }
+}
+
+/* ===== KHUSUS UKURAN LAPTOP (768px – 1439px) ===== */
+@media (min-width: 768px) and (max-width: 1439px) {
+    .container-main {
+        padding-top: 7px !important;  /* naikkan jarak dari header */
+    }
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #e3edf7, #cbdcf0);
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;    
+    border-radius: 0 0 40px 40px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+header h2 { font-weight: 600; }
+
+/* Container */
+.container-main { padding: 50px 15px 60px; }
+
+/* Default row (mobile fallback) */
+.row.g-4 {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: stretch;
+    justify-content: center;
+}
+
+/* Menu card */
+.menu-card {
+    background: rgba(255,255,255,0.09);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-align: center;
+    padding: 25px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #fff;
+    border: 2px solid transparent;
+    min-height: 135px;
+    backdrop-filter: blur(6px);
+}
+.menu-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 25px rgba(255,255,255,0.1);
+    border-color: #a83232;
+}
+.menu-icon { font-size: 40px; margin-bottom: 12px; color: #ffcc33; }
+.menu-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+.menu-desc { font-size: 0.9rem; opacity: 0.85; color: #8d8d8d !important; }
+
+.menu-input .menu-icon { color: #ffcc33; }
+.menu-print .menu-icon { color: #4da6ff; }
+
+.menu-card:hover .menu-icon {
+    transform: scale(1.1);
+    transition: 0.3s;
+}
+
+/* Footer */
+footer { 
+    background-color: rgba(255, 255, 255, 0.2);
+    border-top: 2px solid #ebf2f4;
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    padding: 12px 0; 
+    font-size: 0.9em; 
+    color: #d0d3d9; 
+    border-radius: 30px 30px 0 0; 
+    text-align: center;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+    z-index: 100;
+}
+
+/* =========================================
+   Judul Utama ("Selamat Datang")
+   ========================================= */
+.judul-teks {
+    text-align: center;       /* Center horizontal semua teks di dalam h2 */
+    font-size: 2em;           /* Ukuran font untuk "Selamat Datang" */
+    color: #1A3A5F;           /* Warna font "Selamat Datang" */
+    margin: 0;                /* Hilangkan margin default h2 */
+}
+
+/* =========================================
+   Nama User ({{ user_name }})
+   ========================================= */
+.user-name {
+    display: block;           /* Pastikan berada di baris baru di bawah "Selamat Datang" */
+    font-size: 0.5em;         /* Setengah ukuran dari judul utama */
+    color: #413404;           /* Warna font khusus untuk user */
+    margin-top: 9px;          /* Jarak antara "Selamat Datang" dan "(user)" */
+}
+
+/* =========================================
+   Subjudul ("Sistem Monitoring Produk")
+   ========================================= */
+.baris-sub {
+    display: block;
+    text-align: center;       /* Center horizontal */
+    font-size: 1em;           /* Ukuran lebih kecil dari judul */
+    margin-top: 0px;          /* Jarak dari baris utama */
+    color: #1A3A5F;           /* Warna font subjudul */
+}
+
+/* Quotes and logout */
+#quote-box { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); text-align: center; color: #c2b9b9; max-width: 90%; max-height: 90px; overflow: hidden; z-index: 100; animation: fadeSlideUp 0.8s ease forwards; }
+#quote-box p { font-size: 0.9rem; font-style: italic; color: #c2b9b9 !important; font-weight: 400; margin: 0; line-height: 1.2rem; }
+#quote-box small { font-size: 0.8rem; color: #c2b9b9 !important; display: block; }
+
+.logout-link { position: fixed !important; bottom: 60px; left: 50% !important; transform: translateX(-50%) !important; color: #ff5555; font-weight: 500; text-decoration: none; z-index: 105 !important; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.4); }
+.logout-link:hover { color: #ff0000; transform: translateX(-50%) scale(1.05) !important; }
+
+/* Animations used */
+@keyframes fadeSlideUp { 0% { opacity: 0; transform: translate(-50%, 20px); } 100% { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes fadeIn { 0%{opacity:0}100%{opacity:1} }
+
+/* Header fixed style */
+.judul-fixed { position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(135deg, #f2c185 0%, #e2eae5 30%, #d4e0ee 60%, #b9d7af 100%); z-index: 1000; padding: 12px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.judul-teks { text-align: center; margin: 0; line-height: 0.6; color: #1A3A5F; }
+.baris-utama { display: block; font-size: 2.1rem; font-weight: 700; }
+.baris-sub { display: block; font-size: 1.3rem; opacity: 0.9; }
+
+/* overall body padding (desktop fallback) */
+body { padding-top: 130px; }
+
+/* ===== DESKTOP: force 1 row of 4 cards (user) =====
+   - grid-template-columns controls the *width* of each card on desktop
+   - change the value (e.g. 190px) to adjust card width
+   - column-gap controls horizontal spacing (jarak horizontal)
+   - row-gap controls vertical spacing (jarak vertikal)
+*/
+@media (min-width: 769px) {
+
+    .row.g-4 {
+        display: grid !important;
+        justify-content: center;
+        grid-template-columns: repeat(4, 190px); /* <<< lebar tiap kartu (ubah jika perlu) */
+        column-gap: 25px;                         /* jarak horizontal antar kartu */
+        row-gap: 25px;                            /* jarak vertikal antar baris (jika ada) */
+    }
+
+    /* reset bootstrap column behaviors */
+    .col-md-3 {
+        flex: unset !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* kecilkan isi agar proporsional */
+    .menu-card {
+        height: 130px !important;
+        padding: 12px 8px !important;
+    }
+    .menu-icon { font-size: 26px !important; margin-bottom: 6px !important; }
+    .menu-title { font-size: 0.9rem !important; margin-bottom: 4px !important; }
+    .menu-desc { font-size: 0.75rem !important; line-height: 1.1rem !important; }
+
+    /* keep the decor bottom visible and unchanged */
+    .decor-bottom { height: 180px; width: 100%; background: radial-gradient(circle at center bottom, rgba(139,0,0,0.25), transparent 70%); border-radius: 50% 50% 0 0; filter: blur(10px); pointer-events: none; z-index: 1; }
+}
+@media (max-width: 576px) {
+
+    /* grid tetap, tapi jarak dirapatkan */
+    .row.g-4 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0px !important;   /* <<< dulu 15px, sekarang lebih rapat */
+    }
+
+    /* tinggi menu diperkecil */
+    .menu-card {
+        min-height: 110px !important;   /* <<< dulu 150px */
+        max-height: 120px !important;
+        padding: 8px 6px !important;    /* <<< padding diperkecil */
+        border-radius: 10px !important;
+    }
+
+    /* icon + text lebih kecil & rapat */
+    .menu-icon { font-size: clamp(28px, 3vw, 40px); margin-bottom: 10px; color: #ffcc33; }
+    .menu-title { font-size: clamp(0.9rem, 1.2vw, 1.1rem); font-weight: 600; margin-bottom: 6px; }
+    .menu-desc { font-size: clamp(0.75rem, 1vw, 0.9rem); opacity: 0.85; color: #e1dcdc !important; }
+}
+
+/* ===== MOBILE: container menu ikut posisi header (fixed) ===== */
+@media (max-width: 576px) {
+    .container-main {
+        position: fixed;
+        top: 60px; /* ketinggian header fixed */
+        left: 0;
+        width: 100%;
+        overflow-y: auto;
+        padding-bottom: 120px; /* agar tidak ketutup footer */
+        height: calc(100vh - 90px - 70px); /* layar minus header & footer */
+        z-index: 50;
+    }
+}
+#quote-box hr {
+    width: 90vw;                  /* lebar viewport */
+    margin: 0 0 8px 0;            /* jarak bawah 8px dari quotes */
+    border: 1px solid #ffffff !important;  /* warna garis
+    box-sizing: border-box;       /* pastikan tidak overflow */
+}
+
+#quote-box p {
+    margin-top: 10px;              /* jarak atas dari garis */
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #c2b9b9 !important;
+    font-weight: 400;
+    line-height: 1.2rem;
+}
+
+/* ===== MONITOR BESAR (1440px ke atas) ===== */
+@media (min-width: 1440px) {
+
+    /* Grid container */
+    .row.g-4 {
+        margin-top: 40px !important;
+
+        display: grid !important;
+        justify-content: center;
+        align-items: start;
+
+        grid-template-columns: repeat(3, 280px) !important;
+        column-gap: 40px !important;
+        row-gap: 40px !important;
+
+        width: 100%;
+        max-width: 1500px;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    /* Kolom Bootstrap override */
+    .row.g-4 > .col-md-3 {
+        width: 280px !important;
+        max-width: 280px !important;
+        flex: 0 0 280px !important;
+        padding: 0 !important;
+    }
+
+    /* Card menu */
+    .row.g-4 .menu-card {
+        height: 180px !important;
+        min-height: 180px !important;
+
+        padding: 24px 18px !important;
+        border-radius: 16px !important;
+
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    /* Icon */
+    .row.g-4 .menu-icon {
+        font-size: 40px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Judul */
+    .row.g-4 .menu-title {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* Deskripsi */
+    .row.g-4 .menu-desc {
+        font-size: 0.75rem !important;
+        line-height: 1.1rem !important;
+        opacity: 0.85;
+        color: #f3f0f0 !important;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header class="judul-fixed">
+    <div class="judul-teks-container">
+        <h2 class="judul-teks">
+            Selamat Datang
+            <span class="user-name">({{ user_name }})</span>
+        </h2>
+        <span class="baris-sub">Sistem Monitoring Produk</span>
+    </div>
+</header>
+
+<div class="container container-main menu-fixed">
+    <div class="row g-4 justify-content-center">
+
+        <!-- Dashboard -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-dashboard" onclick="location.href='/dashboard'">
+                <div class="menu-icon"><i class="bi bi-speedometer2"></i></div>
+                <div class="menu-title">Dashboard</div>
+                <div class="menu-desc">Ringkasan Sistem</div>
+            </div>
+        </div>
+
+        <!-- Validitas -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-input" onclick="location.href='/input'">
+                <div class="menu-icon"><i class="bi bi-check2-circle"></i></div>
+                <div class="menu-title">Validitas</div>
+                <div class="menu-desc">Periksa data expired</div>
+            </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-print" onclick="location.href='/monitoring/menu'">
+                <div class="menu-icon"><i class="bi bi-graph-up"></i></div>
+                <div class="menu-title">Monitoring</div>
+                <div class="menu-desc">Data pemantauan &amp; Print ceklist expired</div>
+            </div>
+        </div>
+
+        <!-- Cari Produk (dimatikan sementara: tetap ada di markup, tapi bisa dis-comment kalau mau) -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-cari" onclick="location.href='/cari'">
+                <div class="menu-icon"><i class="bi bi-search"></i></div>
+                <div class="menu-title">Cari Produk</div>
+                <div class="menu-desc">Input Barcode / Nama Produk dan Lihat Data</div>
+            </div>
+        </div>
+
+        <!-- Tambah Produk -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-add" onclick="location.href='/tambah'">
+                <div class="menu-icon"><i class="bi bi-plus-circle"></i></div>
+                <div class="menu-title">Tambah Produk</div>
+                <div class="menu-desc">Tambahkan produk di sini<br>Jika produk belum terdaftar</div>
+            </div>
+        </div>
+
+        <!-- Tolak Produk (User) -->
+        <div class="col-md-3 col-sm-6 d-flex">
+            <div class="menu-card menu-tolak" onclick="location.href='/tolak'">
+                <div class="menu-icon"><i class="bi bi-x-circle"></i></div>
+                <div class="menu-title">Produk Ditolak</div>
+                <div class="menu-desc">Lihat daftar produk yang ditolak</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- dekorasi bawah (tetap ada) -->
+    <div class="decor-bottom"></div>
+</div>
+
+<!-- Logout fixed di atas footer -->
+<a href="/logout" class="logout-link">Logout</a>
+
+<!-- Quotes -->
+<div id="quote-box" class="text-center text-light">
+    <hr class="border-secondary w-95 mx-auto" style="opacity:.12">
+    <p id="quote-text"></p>
+    <small id="quote-author"></small>
+</div>
+
+<script>
+const quotes = [
+    { text: "Fokus pada proses, hasil akan mengikuti.", author: "Eeng Irawan" },
+    { text: "Kesempatan besar lahir dari kerja kecil yang konsisten.", author: "James Clear" },
+    { text: "Keberanian adalah langkah pertama menuju kemenangan.", author: "Napoleon Bonaparte" },
+    { text: "Kesuksesan dimulai dari keputusan untuk mencoba.", author: "John C. Maxwell" },
+    { text: "Disiplin adalah jembatan antara tujuan dan pencapaian.", author: "Jim Rohn" },
+    { text: "Jadilah versi terbaik dari dirimu sendiri.", author: "Ralph Waldo Emerson" },
+    { text: "Hasil besar datang dari langkah kecil yang konsisten.", author: "Anonim" },
+    { text: "Belajar dari setiap kesalahan adalah kunci kemajuan.", author: "Warren Buffett" },
+    { text: "Kesabaran adalah rahasia dari semua pencapaian besar.", author: "Helen Keller" },
+    { text: "Kerja keras mengalahkan bakat ketika bakat tidak bekerja keras.", author: "Tim Notke" },
+    { text: "Mulailah dari mana kamu berada, gunakan apa yang kamu punya.", author: "Arthur Ashe" },
+    { text: "Perubahan kecil setiap hari membawa hasil besar.", author: "Robin Sharma" },
+    { text: "Tidak ada jalan pintas menuju tempat yang berharga.", author: "Beverly Sills" },
+    { text: "Jika ingin hasil berbeda, lakukan sesuatu yang berbeda.", author: "Albert Einstein" },
+    { text: "Motivasi membuatmu mulai, kebiasaan membuatmu bertahan.", author: "Jim Ryun" },
+    { text: "Kegagalan adalah kesempatan untuk mulai lagi lebih baik.", author: "Henry Ford" },
+    { text: "Setiap hari adalah peluang menjadi lebih baik.", author: "Dalai Lama" },
+    { text: "Resiko terbesar adalah tidak mengambil resiko.", author: "Mark Zuckerberg" },
+    { text: "Kunci kesuksesan adalah fokus pada tujuan, bukan hambatan.", author: "Tony Robbins" },
+    { text: "Bekerjalah dalam diam, biarkan hasil yang berbicara.", author: "Frank Ocean" }
+];
+const q = quotes[Math.floor(Math.random()*quotes.length)];
+document.getElementById("quote-text").innerText = "“" + q.text + "”";
+document.getElementById("quote-author").innerText = "~ " + q.author;
+</script>
+
+<footer>© 2025 Eeng Irawan. All Rights Reserved.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

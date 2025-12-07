@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard - Sistem Monitoring</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<style>
+/* ===== Body & HTML Full Height ===== */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(
+    160deg,
+    #ffffff 0%,
+    #e6e6e6 50%,
+    #cfcfcf 100%
+);
+
+    color: #fff;
+}
+
+/* ===== Header ===== */
+header { 
+    background: linear-gradient(
+        135deg,
+        #15335a 0%,      
+        #1b3f6f 25%,     
+        #2a2a2a 55%,     
+        #4a1d68 80%,    
+        #8a34b8 100%   
+    );
+
+    color: #ffffff; 
+    text-align: center; 
+    padding: 16px 0;
+    border-radius: 0 0 32px 32px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+
+
+/* ===== Container ===== */
+.container {
+    flex: 1;
+    width: 95%;
+    max-width: 100%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ===== Summary Cards ===== */
+.summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.summary-cards .card {
+    flex: 1 1 22%;
+    min-width: 200px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+    padding: 12px;
+    height: 100px;
+    box-sizing: border-box;
+
+    /* ===== Tambahan BG ===== */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+}
+
+.summary-cards.row .card.position-relative h3 {
+    font-size: clamp(1.6rem, 2vw, 1.5rem);
+}
+
+.summary-cards.row .card.position-relative p {
+    font-size: clamp(1.5rem, 1.9vw, 1.3rem);
+}
+
+
+/* HP / Mobile */
+@media (max-width: 768px) {
+    .summary-cards.row .card.position-relative h3 {
+        font-size: 1rem; /* atau 1.1rem sesuai kebutuhan */
+    }
+
+    .summary-cards.row .card.position-relative p {
+        font-size: 0.9rem; /* lebih kecil agar muat di layar HP */
+    }
+}
+
+
+/* Background hanya untuk desktop */
+@media (min-width: 769px) {
+    .summary-cards .card {
+        background: linear-gradient(
+            135deg,
+            #0a1930 0%,     /* Biru sangat gelap */
+            #0e1e3f 20%,    /* Biru gelap */
+            #000000 55%,    /* Hitam */
+            #2b0e42 80%,    /* Ungu gelap */
+            #6d1b8c 100%    /* Ungu */
+        );
+        background-size: cover;
+        background-position: center;
+        color: #fff; /* pastikan teks tetap terlihat */
+        border: none;
+    }
+}
+
+/* === GRADIENT UNTUK SUMMARY CARD DI HP === */
+@media (max-width: 768px) {
+    .summary-cards .card {
+        background: linear-gradient(
+            135deg,
+            #0a1930 0%,
+            #0e1e3f 20%,
+            #000000 55%,
+            #2b0e42 80%,
+            #6d1b8c 100%
+        ) !important;
+
+        background-size: cover !important;
+        background-position: center !important;
+        color: #fff !important;
+        border: none !important;
+    }
+}
+
+/* Default chart-card: HP & laptop */
+.chart-card {
+    position: relative; /* penting untuk pseudo-element */
+    background-color: #1e1e1e;
+}
+/* Khusus monitor ini diagram lingkaran */
+@media (min-width: 1601px) {
+    .chart-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /* bukan 200% */
+        height: 100%;
+        background-image: url('{{ url_for("static", filename="bg.png") }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: 0;
+    }
+
+    .chart-card > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+/* Khusus laptop ini diagram lingkara */
+@media (min-width: 769px) and (max-width: 1600px) {
+    .chart-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%; /* sejajar dengan card */
+        height: 100%;
+        background-image: url('{{ url_for("static", filename="bg.png") }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: 0;
+        opacity: 0.8; /* optional, biar tidak terlalu dominan */
+    }
+
+    /* Pastikan konten tetap di atas background */
+    .chart-card > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.summary-cards .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.3); /* overlay tipis */
+    border-radius: inherit;
+    z-index: 0;
+}
+
+.summary-cards .card h3,
+.summary-cards .card p,
+.summary-cards .card button {
+    position: relative;
+    z-index: 1;
+}
+
+.summary-cards .card h3 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+}
+
+.summary-cards .card p {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.summary-cards .card:nth-child(1) p { color: rgba(54, 162, 235, 0.9); }  
+.summary-cards .card:nth-child(2) p { color: rgba(255, 99, 132, 0.9); }  
+.summary-cards .card:nth-child(3) p { color: rgba(75, 192, 192, 0.9); }  
+.summary-cards .card:nth-child(4) p { color: rgba(255, 206, 86, 0.9); }  
+
+/* ===== Chart Card ===== */
+.chart-card {
+    background: rgba(255,255,255,0.15);
+    padding: 20px;
+    border-radius: 12px;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    width: 100%;              /* penuh container */
+    max-width: 93.5%;           /* sejajar dengan summary cards */
+    margin: 0 auto 20px auto; /* center dan jarak bawah */
+    box-sizing: border-box;
+}
+
+/* ===== Chart Container ===== */
+.chart-container { 
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+    width: 100%;
+    max-width: 600px;         /* batasi ukuran lingkaran */
+    aspect-ratio: 1 / 1;
+    margin: auto;
+}
+
+/* ===== Toggle Early ===== */
+#toggleEarly {
+    padding: 0.10rem 0.5rem;
+    font-size: 0.65rem;
+    border-radius: 0.25rem;
+    background-color: #0d6efd;
+    color: #fff;
+    position: absolute;
+    top: 70px;  /* default desktop */
+    right: 8px;
+}
+
+/* ===== Toggle Expired ===== */
+#toggleExpired {
+    padding: 0.10rem 0.5rem;
+    font-size: 0.65rem;
+    border-radius: 0.25rem;
+    background-color: #dc3545;
+    color: #fff;
+    position: absolute;
+    top: 70px;  /* default desktop */
+    right: 8px;
+}
+
+@media (max-width: 768px) {
+    #toggleEarly {
+        top: 50px !important;
+    }
+    #toggleExpired {
+        top: 50px !important;
+    }
+}
+
+/* ===== Floating Table Expired ===== */
+.floating-table.expired {
+    display: none;
+    position: fixed;
+    top: 260px;
+    right: 1400px;
+    width: 20%;
+    max-height: 400px;
+    font-size: 0.65rem;
+    overflow-y: auto;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 9999;
+}
+
+/* ===== Floating Table Early Expired ===== */
+.floating-table.early {
+    display: none;
+    position: fixed;
+    top: 260px;
+    right: 150px;
+    width: 20%;
+    max-height: 400px;
+    font-size: 0.65rem;
+    overflow-y: auto;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 9999;
+}
+
+/* ===== Mobile (HP) ===== */
+@media (max-width: 768px) {
+    .floating-table {
+        position: static;
+        width: 90% !important;
+        max-height: none;
+        margin-top: 50px;
+        box-shadow: none;
+        font-size: 0.85rem;
+    }
+}
+
+/* ===== Laptop Kecil (1024px – 1366px) ===== */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    .floating-table.expired {
+        right: 930px;     /* lebih dekat */
+        width: 25%;
+        font-size: 0.75rem;
+    }
+
+    .floating-table.early {
+        right: 20px;      /* atur penempatan */
+        width: 25%;
+        font-size: 0.75rem;
+    }
+}
+
+/* ===== Laptop Standar / Besar (1367px – 1600px) ===== */
+@media (min-width: 1367px) and (max-width: 1600px) {
+    .floating-table.expired {
+        right: 1100px;
+        width: 22%;
+        font-size: 0.7rem;
+    }
+
+    .floating-table.early {
+        right: 120px;
+        width: 22%;
+        font-size: 0.7rem;
+    }
+}
+
+/* Garis penghubung */
+.connector-line {
+    position: fixed;
+    height: 2px;
+    background: #0d6efd;
+    z-index: 9998;
+    transform-origin: left center;
+    transition: 0.25s ease;
+    display: none;   /* ← FIX */
+}
+
+/* ===== Card Styling ===== */
+.card { 
+    background: rgba(255,255,255,0.15); 
+    padding: 20px;
+    border-radius: 12px;
+    color: #fff; 
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.card h3 { margin-bottom: 12px; }
+
+/* ===== Tombol Back ===== */
+.btn-back {
+    display: block;
+    margin: 2px auto 0;  /* top | horizontal | bottom */
+    background: #8B0000;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+.btn-back:hover {
+    background-color: #45a049;
+    color: #fff;
+}
+
+@media (max-width: 576px) {
+    .btn-back {
+        position: relative;
+        top: -50px; /* geser ke atas supaya dekat chart-card */
+        margin-bottom: 12px;
+    }
+    .chart-card {
+        margin-bottom: 8px !important;
+    }
+}
+
+/* ===== Chart Card Responsive HP ===== */
+@media (max-width: 576px) {
+    .chart-card {
+        margin-bottom: 4px !important;  /* kurangi jarak ke tombol back */
+    }
+}
+
+/* ===== Responsive Tablet ===== */
+@media (max-width: 768px) {
+    .summary-cards { gap: 12px; }
+    .summary-cards .card { flex: 0 0 48%; max-width: 48%; min-width: 0; height: auto; }
+    .chart-card { max-width: calc(48% * 2 + 12px); }
+    .chart-container { max-width: 90%; }
+}
+
+/* ===== Responsive HP ===== */
+@media (max-width: 576px) {
+    .summary-cards {
+        gap: 8px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .summary-cards .card { flex: 0 0 48%; max-width: 48%; min-width: 0; height: auto; margin-bottom: 8px; }
+    .chart-card { max-width: 100%; }
+    .chart-container { max-width: 90%; }
+    .floating-table { width: 90%; left: 5%; right: auto; top: 310px; font-size: 0.75rem; max-height: 300px; }
+}
+@media (max-width: 576px) {
+    .chart-card {
+        margin-top: 1px !important;    /* jarak ke atas */
+        margin-bottom: 60px !important; /* jarak ke summary cards */
+        width: 100% !important;         /* full lebar container HP */
+    }
+}
+@media (max-width: 576px) {
+    .chart-card {
+        background-size: cover !important;      /* isi full */
+        background-repeat: no-repeat !important;
+        background-position: center center !important;
+        background-color: #1e1e1e; /* fallback */
+        width: 100% !important;
+    }
+}
+
+/* ===== Legend 1 Baris ===== */
+.chart-container ~ ul {
+    white-space: nowrap !important;
+    justify-content: center !important;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h2>Dashboard Sistem Monitoring</h2>
+</header>
+
+<div class="container">
+
+    <!-- ======= Summary Cards (perbaikan nesting & tombol di dalam card) ======= -->
+<div class="summary-cards row mb-4 g-2">
+    <div class="card p-3 col-6 position-relative">
+        <h3>Total Produk</h3>
+        <p>{{ summary.total_produk }}</p>
+    </div>
+
+    <div class="card p-3 col-6 position-relative">
+        <h3>Produk Expired</h3>
+        <p>{{ summary.produk_expired }}</p>
+
+        <!-- tombol show expired (di dalam card) -->
+        <button id="toggleExpired" class="btn btn-sm btn-danger position-absolute"
+                style="top:70px; right:8px;">
+            <i class="bi bi-eye"></i> Show
+        </button>
+    </div>
+
+    <div class="card p-3 col-6 position-relative">
+        <h3>Early Expr 30 Hari</h3>
+        <p>{{ summary.produk_valid }}</p>
+
+        <!-- tombol show early (di dalam card) -->
+        <button id="toggleEarly" class="btn btn-sm btn-primary position-absolute"
+                style="top:70px; right:8px;">
+            <i class="bi bi-eye"></i> Show
+        </button>
+    </div>
+
+    <div class="card p-3 col-6 position-relative">
+        <h3>Produk Baru</h3>
+        <p>{{ summary.produk_tambah }}</p>
+    </div>
+</div>
+
+    <!-- ======= Tabel Produk Expired ======= -->
+<div id="expiredTable" class="floating-table expired" style="display:none;">
+    <table class="table table-striped mb-0">
+        <thead>
+            <tr>
+                <th style="width: 10%; color: #dc3545;">No</th>
+                <th style="width: 60%; color: #dc3545;">Nama Produk</th>
+                <th style="width: 30%; color: #dc3545;">Expired</th>
+            </tr>
+        </thead>
+
+        <tbody>
+             {% for produk in expired_list %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ produk.Nama_Produk or produk.nama_produk }}</td>
+                <td>{{ produk.expired }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    <!-- ======= Tabel Early Expired ======= -->
+    <div id="earlyTable" class="floating-table early" style="display:none;">
+        <table class="table table-striped mb-0">
+            <thead>
+                <tr>
+                      <th style="width: 10%; color: #0d6efd;">No</th>
+                      <th style="width: 60%; color: #0d6efd;">Nama Produk</th>
+                      <th style="width: 30%; color: #0d6efd;">Expired</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produk in early_expired %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ produk.nama_produk }}</td>
+                    <td>{{ produk.expired }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+    <!-- Diagram Lingkaran -->
+    <div class="card chart-card mb-4" 
+        style="background-image: url('{{ url_for('static', filename='bg.png') }}');">
+        <h3 class="text-center">Dashboard Produk</h3>
+        <div class="chart-container">
+            <canvas id="produkChart"></canvas>
+        </div>
+    </div>
+
+    <a href="/" class="btn btn-warning btn-back">Kembali ke Menu Utama</a>
+
+<!-- Garis Penghubung -->
+<div id="connector" class="connector-line"></div>
+
+<script>
+window.onload = function() {
+    const summary = {
+        total: {{ summary.total_produk | default(0) }},
+        expired: {{ summary.produk_expired | default(0) }},
+        early: {{ summary.produk_valid | default(0) }},
+        baru: {{ summary.produk_tambah | default(0) }}
+    };
+
+    const dataColors = [
+        'rgba(54, 162, 235, 0.9)',
+        'rgba(255, 99, 132, 0.9)',
+        'rgba(75, 192, 192, 0.9)',
+        'rgba(255, 206, 86, 0.9)'
+    ];
+
+    const ctx = document.getElementById('produkChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Total Produk','Produk Expired','Early Expired','Produk Baru'],
+            datasets: [{
+                data: [summary.total, summary.expired, summary.early, summary.baru],
+                backgroundColor: dataColors,
+                borderColor: '#1e1e1e',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#fff',
+                        boxWidth: 12,
+                        padding: 8,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context){
+                            const totalSum = context.dataset.data.reduce((a,b)=>a+b,0);
+                            const value = context.raw;
+                            const percent = totalSum ? ((value/totalSum)*100).toFixed(1) : 0;
+                            return context.label + ': ' + value + ' (' + percent + '%)';
+                        }
+                    }
+                },
+                datalabels: {
+                    color: 'white',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: (value) => value
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+};
+
+// =====================
+// TOGGLE SYSTEM
+// =====================
+
+// Early Expired
+const earlyBtn = document.getElementById('toggleEarly');
+const earlyTable = document.getElementById('earlyTable');
+let earlyOpen = false;
+let hideTimer = null;
+
+// Expired
+const expiredBtn = document.getElementById('toggleExpired');
+const expiredTable = document.getElementById('expiredTable');
+let expiredOpen = false;
+
+// =====================
+// TOGGLE EARLY
+// =====================
+
+earlyBtn.addEventListener('click', () => {
+    if (!earlyOpen) {
+        earlyTable.style.display = "block";
+        earlyOpen = true;
+
+        earlyBtn.innerHTML = '<i class="bi bi-eye-slash"></i> Hide';
+
+        // Auto hide 30s
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+            earlyTable.style.display = "none";
+            earlyOpen = false;
+            earlyBtn.innerHTML = '<i class="bi bi-eye"></i> Show';
+            updateConnector();
+        }, 30000);
+    } else {
+        earlyTable.style.display = "none";
+        earlyOpen = false;
+        earlyBtn.innerHTML = '<i class="bi bi-eye"></i> Show';
+
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+    }
+
+    updateConnector();
+});
+
+// =====================
+// TOGGLE EXPIRED
+// =====================
+
+expiredBtn.addEventListener('click', () => {
+    if (!expiredOpen) {
+        expiredTable.style.display = "block";
+        expiredOpen = true;
+
+        expiredBtn.innerHTML = '<i class="bi bi-eye-slash"></i> Hide';
+    } else {
+        expiredTable.style.display = "none";
+        expiredOpen = false;
+
+        expiredBtn.innerHTML = '<i class="bi bi-eye"></i> Show';
+    }
+
+    updateConnector();
+});
+
+// =====================
+// CONNECTOR LINE
+// =====================
+
+window.addEventListener('resize', updateConnector);
+window.addEventListener('scroll', updateConnector);
+
+function updateConnector() {
+    const connector = document.getElementById('connector');
+
+    // Jika semua tertutup
+    if (!earlyOpen && !expiredOpen) {
+        connector.style.display = "none";
+        return;
+    }
+
+    // Tentukan sumber tabel
+    let btn = null;
+    let table = null;
+
+    if (earlyOpen) {
+         connector.style.background = '#0d6efd'; // biru untuk early
+        btn = earlyBtn;
+        table = earlyTable;
+    } else if (expiredOpen) {
+        connector.style.background = '#dc3545'; // merah untuk expired
+        btn = expiredBtn;
+        table = expiredTable;
+    }
+
+    // Jika tabel hidden via CSS
+    if (!btn || !table || table.style.display === "none") {
+        connector.style.display = "none";
+        return;
+    }
+
+    connector.style.display = "block";
+
+    const btnRect = btn.getBoundingClientRect();
+    const tblRect = table.getBoundingClientRect();
+
+    const startX = btnRect.right;
+    const startY = btnRect.top + btnRect.height / 2;
+
+    const endX = tblRect.left;
+    const endY = tblRect.top + 20;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const length = Math.sqrt(dx*dx + dy*dy);
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+    connector.style.left = startX + "px";
+    connector.style.top = startY + "px";
+    connector.style.width = length + "px";
+    connector.style.transform = `rotate(${angle}deg)`;
+}
+</script>
+
+</body>
+</html>
