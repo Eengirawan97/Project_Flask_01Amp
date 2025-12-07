@@ -7,24 +7,24 @@ import mysql.connector
 from mysql.connector import Error
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread
+import os
+import json
 
 validitas_bp = Blueprint('validitas', __name__)
 
-# --- MySQL Config ---
+# --- MySQL Config from environment ---
 MYSQL_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'monitoring_produk_eeng'
+    'host': os.environ.get('MYSQL_HOST', 'localhost'),
+    'user': os.environ.get('MYSQL_USER', 'root'),
+    'password': os.environ.get('MYSQL_PASSWORD', ''),
+    'database': os.environ.get('MYSQL_DATABASE', 'monitoring_produk_eeng')
 }
 
-# --- Google Sheets ---
-GOOGLE_CREDENTIALS_FILE = 'flaskexpiredprojecteeng-63cbf1a35088.json'
-SPREADSHEET_ID = '1zjzTLXve-UUWIZEbTO09e4PA-2EjAwXZdLMi4B2LPYM'
+# --- Google Sheets Config from environment ---
+SPREADSHEET_ID = os.environ.get('SPREADSHEET_ID', '1zjzTLXve-UUWIZEbTO09e4PA-2EjAwXZdLMi4B2LPYM')
 
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
-
 
 def get_gsheet_client():
     try:
@@ -32,14 +32,20 @@ def get_gsheet_client():
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive"
         ]
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            GOOGLE_CREDENTIALS_FILE, scope
-        )
+
+        # Ambil credentials dari environment variable
+        creds_json_str = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+        if not creds_json_str:
+            logger.error("❌ Environment variable GOOGLE_CREDENTIALS_JSON belum diset")
+            return None
+
+        creds_dict = json.loads(creds_json_str)
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         return gspread.authorize(credentials)
+
     except Exception as e:
         logger.error(f"❌ Gagal koneksi Google Sheets: {e}")
         return None
-
 
 # ======================================================================
 #                            ROUTE VALIDITAS
